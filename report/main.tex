@@ -1,0 +1,98 @@
+\include{header}
+\usetikzlibrary{arrows.meta,matrix,decorations.pathreplacing}
+\setmainfont{Times New Roman} % 원하는 글꼴 설정
+\renewcommand{\contentsname}{목차} % 목차 이름 설정
+\setcounter{tocdepth}{1} % subsection 숨기기
+
+\title{딥러닝 Term Project Report}
+\author{2019052851 컴퓨터학부 박준성}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\section{Pretrained Model}
+비교적 적은 parameter로도 정확하게 학습될 수 있는 EfficientNet을 선택했다.
+builder가 B0부터 B7까지 있는데, 그 중 모델 용량 제한을 넘지 않는 모델 중 가장 큰 용량을 가진 B3를 선택했다.
+
+6번의 epoch에서 Resnet18과 비교한 결과는 다음과 같다.
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/model-compare.png}
+\end{center}
+
+\section{Data augmentation}
+EfficientNet 모듈에서 제공하는 \texttt{EfficientNet\_B3\_Weights.IMAGENET1K\_V1.transforms}을 통해 데이터 증강을 진행했다.
+
+이미지를 320 x 320로 resize하여 300 x 300이 되도록 random crop을 진행하고 $[0.0, 1.0]$ 범위의 배율로 random resize한 후, normalization을 진행했다.
+normalization할 때 사용한 평균과 표준편차는 ImageNet dataset의 평균과 표준편차를 사용한다.
+
+validation과 test할 때는 300 x 300으로 resize하고 normalization만 진행하였다.
+
+\section{Modify classifier}
+pretrained model의 classifier 부분이 원래는 아래와 같았다.
+\begin{lstlisting}[language=Python]
+(classifier) : Sequential(
+    (0) : Dropout(p=0.3, inplace=True)
+    (1) : Linear(in_features=1536, out_features=1000, bias=True)
+) 
+\end{lstlisting}
+
+Animals-10 dataset에 대해서는 10개의 class에 대해서 분류해야 하므로 아래와 같이 수정하였다.
+\begin{lstlisting}[language=Python]
+(classifier) : Sequential(
+    (0) : Dropout(p=0.3, inplace=True)
+    (1) : Linear(in_features=1536, out_features=512, bias=True)
+    (2) : ReLU()
+    (3) : Linear(in_features=512, out_features=64, bias=True)
+    (4) : ReLU()
+    (5) : Linear(in_features=64, out_features=10, bias=True)
+) 
+\end{lstlisting}
+
+6번의 epoch에서 다른 classifier와 비교한 결과는 다음과 같다.
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/classifier-compare.png}
+\end{center}
+
+\section{Data 추가}
+
+실제 동물 사진뿐만 아니라 다른 도메인의 동물(ex. 그림)에 대해서도 분류할 수 있도록 하기 위해 데이터를 추가하였다.
+구글에서 \texttt{xxx painitng}, \texttt{xxx toy}, \texttt{xxx character}와 같은 키워드로 검색하여 분류당 20장의 데이터를 직접 수집했다.
+
+20장의 이미지로는 training data에 비해 너무 적다고 생각이 들어, 
+\texttt{imgaug} 라이브러리를 이용하여 수집한 이미지마다 9장의 이미지를 증강하여 생성하였다.
+그 중 알아볼 수 없을 정도로 증강된 이미지는 제외한 후 training data에 추가하였다.
+
+결과적으로 평균적으로 분류당 150장의 다른 도메인의 해당하는 동물 데이터를 얻을 수 있었다.
+
+\section{Training}
+방대한 ImageNet의 데이터를 이용하여 학습된 pretrained model을 적은 양의 데이터로 학습시키려고 하니 overfitting이 우려되었다.
+따라서 pretrained model의 parameter를 freeze시키고, classifier 부분만 학습시켰다.
+
+learning rate는 0.001로 설정하였다. 
+20 epoch까지 학습을 진행하였고, 그 중 validator accuracy가 가장 좋은 모델을 채택했다.
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/train-freeze.png}
+\end{center}
+가장 validator accuracy가 좋은 모델은 17번째 epoch에 나왔고, 그 때의 accuracy는 97.173\%였다.
+
+\section{추가 Training}
+classifier만 학습시키면 accuracy가 대략 97\% 정도까지 오르는 것을 확인할 수 있었다.
+여기서 더 높은 accuracy를 얻기 위해 pretrained model의 모든 parameter를 학습시키기로 했다.
+
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/lr-compare.png}
+\end{center}
+
+learning rate를 비교했을 때, 0.0001이 적절하다고 생각하여 0.0001로 설정하였다.
+11 epoch까지 학습을 진행하였고, 그 중 test accuarcy가 제일 좋은 모델을 채택했다.
+
+\begin{center}
+    \includegraphics[width=0.6\textwidth]{img/train-unfreeze.png}
+\end{center}
+
+accuracy가 98\%를 넘어서는 것을 확인할 수 있었다.
+
+
+\end{document}

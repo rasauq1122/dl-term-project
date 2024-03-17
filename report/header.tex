@@ -1,0 +1,58 @@
+% !TEX program = xelatex
+% !TEX root = main.tex
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{import}
+\usepackage{kotex}
+\PassOptionsToPackage{table}{xcolor}
+\usepackage{calc}
+\usepackage{listings}
+\usepackage{indentfirst}
+\usepackage{tabularx}
+\usepackage{ulem}
+\usepackage{multicol}
+\usepackage{epigraph}
+\usepackage[many]{tcolorbox}
+\usepackage{geometry}
+\usepackage{titletoc} % titletoc 패키지 사용
+\usepackage{xcolor}
+\usepackage{minted}
+% \usepackage{jupynotex}
+
+\linespread{1.2}
+\everymath{\displaystyle}
+\geometry{margin=1in}
+
+\graphicspath{ {./images/} }
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+
+\newcommand{\translation}[1]{\textsuperscript{#1}}
+
+\setlength\fboxsep{0pt}
+
+\newcommand{\complexity}[1]{$\mathcal{O}\left({#1}\right)$}
+\newcommand{\difficulty}[1]{\includegraphics[width=1em,natwidth=1000,natheight=1000]{#1.svg.png}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{gray!10},
+    basicstyle=\ttfamily\footnotesize,
+    commentstyle=\color{green!40!black},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    stringstyle=\color{red},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4
+}
+
+\lstset{style=mystyle}
